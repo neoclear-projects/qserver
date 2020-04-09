@@ -13,60 +13,89 @@
 #include <mutex>
 #include <iostream>
 #include "src/sock_pool.h"
+#include "src/transmit.h"
+#include "src/scdt.h"
+#include "src/codec.h"
 
-#define MSG_SIZE 1024
+#define MSG_SIZE    0x4000
 
 using namespace std;
 
 void send_msg(int sender, char *msg) {
     sock_pool* pool = sock_pool::get_instance();
 
-    char dat[MSG_SIZE];
-    sprintf(dat, "%s: %s", pool->get_client_name(sender).c_str(), msg);
+    // delete later
+    struct datetime dt;
 
-    pool->for_each([&](int sock, string client) {
-        if (send(sock, dat, MSG_SIZE, 0) <= 0 && errno != EINTR) {
+    char *buffer = transmit::gen_buf();
+    encode::gen_msg(buffer,
+                    dt,
+                    pool->has_name(sender) ? pool->get_sockname(sender) : "Anonymous",
+                    msg);
+
+    pool->for_each([&](int sock) {
+        int rc = transmit::dispatch(sock, buffer);
+        if (rc == COM_FAIL)
             pool->delete_sock(sock);
-        }
     });
+
+    transmit::free_buf(buffer);
 }
 
 void handle(int socket) {
-    char msg[MSG_SIZE];
+    cout << "Client " << socket << " online" << endl;
 
     sock_pool* pool = sock_pool::get_instance();
+    
+    pool->add_sock(socket);
 
-    pool->add_sock(socket, "NeoClear");
-    cout << pool->get_client_name(socket) << endl;
+    char *buffer = transmit::gen_buf();
+    char *name = (char *)malloc(NAME_SIZE);
+    char *msg = (char *)malloc(MSG_SIZE);
+    struct datetime dt;
 
-    while (1) {
-        if (!pool->is_alive(socket)) {
-            printf("%s Disconnected\n", pool->get_death_name(socket).c_str());
-            pool->destroy_sock(socket);
-            return;
-        }
-        
-        memset(msg, 0, sizeof(char) * MSG_SIZE);
+    while (pool->is_alive(socket)) {
+        // cout << "@@@" << endl;
+        transmit::clear_buf(buffer);
+        // memset(msg, 0, MSG_SIZE);
 
-        if (recv(socket, msg, MSG_SIZE, 0) <= 0 && errno != EINTR) {
+        int rc = transmit::receive(socket, buffer);
+        if (rc == COM_FAIL) {
             pool->delete_sock(socket);
             continue;
         }
 
-        printf("%s: %s\n", pool->get_client_name(socket).c_str(), msg);
-        send_msg(socket, msg);
+        switch (decode::request_type(buffer)) {
+        case HEADER_NAME:
+            decode::get_name(name, buffer);
+            pool->register_sockname(socket, string(name));
+            cout << "Client " << socket << " registered name: " << name << endl;
+            break;
+        case HEADER_MSG:
+            decode::get_message(msg, buffer);
+            cout << "Client " << socket << " sent " << msg << endl;
+            send_msg(socket, msg);
+            break;
+        }
+
+        // cout << "Client " << socket << " sent: " << 
+        // printf("%s: %s\n", pool->get_client_name(socket).c_str(), buffer);
+        // send_msg(socket, buffer);
     }
+
+    cout << "Client " << socket << " disconnected" << endl;
+    transmit::free_buf(buffer);
+    free(name);
+    pool->destroy_sock(socket);
 }
 
  
 int main(int argc, char *argv[])
 {
-    int ssock = -1;
-    int csock = -1;
+    int ssock = -1, csock = -1;
     socklen_t clen = 0;
  
-    struct sockaddr_in saddr;
-    struct sockaddr_in caddr;
+    struct sockaddr_in saddr, caddr;
  
     // 创建流套接字
     ssock = socket(AF_INET, SOCK_STREAM, 0);
@@ -82,12 +111,9 @@ int main(int argc, char *argv[])
     // 创建套接字队列，监听套接字
     listen(ssock, 1024);
  
-    char *msg = (char *)malloc(sizeof(char) * 1024);
-
-    while (1) {
+    while (true) {
         // 接收连接，创建新的套接字
         csock = accept(ssock, (struct sockaddr *)&caddr, &clen);
-
         clen = sizeof(caddr);
         
         thread *t = new thread(handle, csock);

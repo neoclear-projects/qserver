@@ -14,22 +14,14 @@ sock_pool* sock_pool::get_instance() {
     return pinstance;
 }
 
-void sock_pool::add_sock(int socket, std::string client) {
+void sock_pool::add_sock(int socket) {
     sock_mtx.lock();
-    socks[socket] = client;
+    socks.insert(socket);
     sock_mtx.unlock();
-}
-
-std::string sock_pool::get_client_name(int socket) {
-    return socks[socket];
 }
 
 // delete sock from active sock pool & put it to remove pool
 void sock_pool::delete_sock(int socket) {
-    rm_mtx.lock();
-    rms[socket] = socks[socket];
-    rm_mtx.unlock();
-
     sock_mtx.lock();
     socks.erase(socket);
     sock_mtx.unlock();
@@ -37,20 +29,32 @@ void sock_pool::delete_sock(int socket) {
 
 // stop connection of this socket
 void sock_pool::destroy_sock(int socket) {
+    name_mtx.lock();
+    sock_name.erase(socket);
+    name_mtx.unlock();
     close(socket);
 }
 
 // check if a socket is waiting to be terminated
 bool sock_pool::is_alive(int socket) {
-    return !rms.count(socket);
+    return socks.count(socket);
 }
 
-// get the value of dead socket if it is waiting to be terminated
-std::string sock_pool::get_death_name(int socket) {
-    return rms[socket];
-}
-
-void sock_pool::for_each(std::function<void(int, std::string)> capture) {
+void sock_pool::for_each(std::function<void(int)> capture) {
     for (const auto& it : socks)
-        capture(it.first, it.second);
+        capture(it);
+}
+
+void sock_pool::register_sockname(int socket, std::string name) {
+    name_mtx.lock();
+    sock_name[socket] = name;
+    name_mtx.unlock();
+}
+
+bool sock_pool::has_name(int socket) {
+    return sock_name.count(socket);
+}
+
+std::string sock_pool::get_sockname(int socket) {
+    return sock_name[socket];
 }

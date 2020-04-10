@@ -38,26 +38,56 @@ int main(int argc, char **argv)
     name[0] = 0x1;
     send(sockfd, name, 1024, 0);
 
-    while (1) {
-        printf(">>> ");
-        scanf("%[^\n]", msg + 1); getchar();
-        msg[0] = 0x0;
-        if (strcmp(msg + 1, ".exit") == 0)
-            exit(0);
-        if (send(sockfd, msg, 0x4000, 0) <= 0 && errno != EINTR) {
-            printf("Server down");
-            exit(0);
-        }
-        // write(sockfd, msg, 1024);
-        if (recv(sockfd, msg, 0x4000, 0) <= 0 && errno != EINTR) {
-            printf("Server down");
-            exit(0);
-        }
-        printf("%s: %s\n", msg + 10, msg + 1034);
-        // printf("Server: %s\n", msg);
+    // while (1) {
+    //     printf(">>> ");
+    //     scanf("%[^\n]", msg + 1); getchar();
+    //     msg[0] = 0x0;
+    //     if (strcmp(msg + 1, ".exit") == 0)
+    //         exit(0);
+    //     if (send(sockfd, msg, 0x4000, 0) <= 0 && errno != EINTR) {
+    //         printf("Server down");
+    //         exit(0);
+    //     }
+    //     // write(sockfd, msg, 1024);
+    //     if (recv(sockfd, msg, 0x4000, 0) <= 0 && errno != EINTR) {
+    //         printf("Server down");
+    //         exit(0);
+    //     }
+    //     if (msg[0] == 0x0)
+    //         printf("%s: %s\n", msg + 10, msg + 1034);
+    //     else
+    //         printf("Unrecognized response\n");
+    //     // printf("Server: %s\n", msg);
         
+    // }
+    
+    recv(sockfd, msg, 0x4000, 0);
+    
+    char ch[10];
+    memset(ch, 0, 10);
+    ch[0] = 0x3;
+    *(int *)(ch + 1) = 2020;
+    ch[5] = 2;
+
+    send(sockfd, ch, 10, 0);
+
+    
+
+    while (1) {
+        recv(sockfd, msg, 0x4000, 0);
+        printf("%s(%d-%d-%d %d:%d:%d): %s\n",
+               msg + 10,
+               *(int *)(msg + 1),
+               msg[5],
+               msg[6],
+               msg[7],
+               msg[8],
+               msg[9],
+               msg + 1034);
     }
+
     close(sockfd);
+
     // while (strcmp((msg = readline(">>> ")), ".exit") != 0) {
     //     write(sockfd, msg, strlen(msg) + 1);
     //     free(msg)

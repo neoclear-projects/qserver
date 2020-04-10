@@ -1,12 +1,13 @@
 #pragma once
 
-#include "scdt.h"
+#include "util.h"
 #include <string>
 
 #define HEADER_NAME     0x1
 #define HEADER_MSG      0x0
 #define HEADER_PST_MSG  0x2
 #define HEADER_SYNC     0x3
+#define HEADER_USR_STS  0x4
 
 // decode request data & database data
 namespace decode {
@@ -30,4 +31,7 @@ namespace encode {
     void gen_msg(char *buffer, struct datetime dt, std::string sender, const char *msg);
     void gen_past_msg(char *buffer, struct datetime dt, std::string sender, const char *msg);
     void gen_sync_msg(char *buffer, struct datetime dt, std::string sender, const char *msg);
+    void gen_login_dat(char *buffer, std::string user);
+    void gen_logout_dat(char *buffer, std::string user);
+    void gen_online_dat(char *buffer, std::string user);
 }

@@ -22,6 +22,9 @@ Next 1 bytes: hour
 Next 1 bytes: minute
 Next 1 bytes: second
 
+## Get online users
+First byte: 0x4
+
 
 # Responses from server (Data Format)
 ## Reserved
@@ -60,3 +63,14 @@ Next 1 bytes: second
 Next 1024 bytes: sender's username
 rest bytes: message
 
+## Response of get user status
+First byte: 0x4
+Rest bytes: online user name
+
+## Response of users get online
+First byte: 0x5
+Rest bytes: online user name
+
+## Response of users get offline
+First byte: 0x6
+Rest bytes: offline user name

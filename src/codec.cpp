@@ -28,11 +28,6 @@ int decode::get_datetime(struct datetime *dt, const char *buffer) {
     dt->second = (int)(*(buffer++));
 }
 
-
-
-
-
-
 void fill_datetime(char *buffer, struct datetime dt) {
     *((int *)buffer) = dt.year;
     buffer += 4;
@@ -72,4 +67,19 @@ void encode::gen_sync_msg(char *buffer, struct datetime dt, std::string sender, 
     strcpy(buffer, sender.c_str());
     buffer += NAME_SIZE;
     strcpy(buffer, msg);
+}
+
+void encode::gen_login_dat(char *buffer, std::string user) {
+    *(buffer++) = 0x5;
+    strcpy(buffer, user.c_str());
+}
+
+void encode::gen_logout_dat(char *buffer, std::string user) {
+    *(buffer++) = 0x6;
+    strcpy(buffer, user.c_str());
+}
+
+void encode::gen_online_dat(char *buffer, std::string user) {
+    *(buffer++) = 0x4;
+    strcpy(buffer, user.c_str());
 }

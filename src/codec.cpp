@@ -83,3 +83,7 @@ void encode::gen_online_dat(char *buffer, std::string user) {
     *(buffer++) = 0x4;
     strcpy(buffer, user.c_str());
 }
+
+void encode::gen_sync_end(char *buffer) {
+    *buffer = 0x7;
+}

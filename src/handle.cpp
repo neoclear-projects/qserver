@@ -9,6 +9,7 @@
 #include "transmit.h"
 #include <unordered_map>
 #include <vector>
+#include <string.h>
 
 // name_register could only happen once through the life cycle of a connection
 void handle::name_register(int socket, const char *buffer) {
@@ -29,6 +30,12 @@ void handle::handle_message(int socket, const char *buffer) {
     char *msg = util::gen_msg_buf();
 
     decode::get_message(msg, buffer);
+
+    if (strlen(msg) == 0) {
+        util::free_msg_buf(msg);
+        return;
+    }
+
     std::string name = sock_pool::get_instance()->get_sockname(socket);
 
     struct datetime cur_time = util::get_current_time();
@@ -81,5 +88,11 @@ void handle::handle_sync(int socket, const char *buffer) {
                              it["content"].c_str());
         transmit::dispatch(socket, buf);
     }
+
+    // Send end of sync data to client
+    transmit::clear_buf(buf);
+    encode::gen_sync_end(buf);
+    transmit::dispatch(socket, buf);
+
     transmit::free_buf(buf);
 }

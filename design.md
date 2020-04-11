@@ -74,3 +74,6 @@ Rest bytes: online user name
 ## Response of users get offline
 First byte: 0x6
 Rest bytes: offline user name
+
+## Response of end of sync information
+First byte: 0x7

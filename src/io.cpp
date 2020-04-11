@@ -1,7 +1,6 @@
 #include "io.h"
 #include "transmit.h"
 #include <string>
-#include <thread>
 #include "sock_pool.h"
 
 void io::dispatch_all(const char *buffer) {

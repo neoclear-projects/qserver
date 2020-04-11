@@ -1,6 +1,6 @@
 #pragma once
 
-#define BUF_SIZE    0x4000
+#define BUF_SIZE    0x1000
 #define COM_OK      0x0
 #define COM_FAIL    0x1
 

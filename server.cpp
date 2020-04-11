@@ -21,8 +21,6 @@
 #include "src/response.h"
 #include "src/db_access.h"
 
-#define MSG_SIZE    0x4000
-
 using namespace std;
 
 void connection(int socket) {
@@ -89,7 +87,7 @@ int main(int argc, char *argv[])
     // 设置服务器接收的连接地址和监听的端口
     saddr.sin_family = AF_INET;                   // 指定网络套接字
     saddr.sin_addr.s_addr = htonl(INADDR_ANY);    // 接受所有IP地址的连接
-    saddr.sin_port = htons(9736);                 // 绑定到 9736 端口
+    saddr.sin_port = htons(5000);                 // 绑定到 9736 端口
 
     // 绑定（命名）套接字
     bind(ssock, (struct sockaddr *)&saddr, sizeof(saddr));

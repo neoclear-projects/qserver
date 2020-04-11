@@ -34,4 +34,5 @@ namespace encode {
     void gen_login_dat(char *buffer, std::string user);
     void gen_logout_dat(char *buffer, std::string user);
     void gen_online_dat(char *buffer, std::string user);
+    void gen_sync_end(char *buffer);
 }
